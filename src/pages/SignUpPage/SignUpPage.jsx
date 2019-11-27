@@ -14,15 +14,12 @@ import Container from "@material-ui/core/Container";
 import { create } from "jss";
 import rtl from "jss-rtl";
 import { StylesProvider, jssPreset, ThemeProvider } from "@material-ui/styles";
-import {
-  makeStyles,
-  createMuiTheme,
-  withStyles
-} from "@material-ui/core/styles";
+import { makeStyles, createMuiTheme, withStyles } from "@material-ui/core/styles";
 import { connect } from "react-redux";
 import { signup } from "../../apis/sessions";
 import { style } from "@material-ui/system";
 import * as Yup from "yup";
+import Validator from '../../react-happy-validator/index';
 
 const styles = theme => ({
   "@global": {
@@ -62,6 +59,31 @@ class SignUpPage extends Component {
 
       emailError: ""
     };
+
+    this.validator = new Validator(this, {
+      rules: {
+        name: { required: true, maxLength: 15, errorState: "nameError" },
+        age: {
+          required: true,
+          integer: true,
+          min: 18,
+          max: 65,
+          errorState: "ageError"
+        },
+        contact: {
+          or: {
+            phone: true,
+            email: true
+          },
+          errorState: "contactError"
+        }
+      },
+      messages: {
+        contact: {
+          or: "You have enter email or phone"
+        }
+      }
+    });
   }
 
   v_email = e => {
@@ -76,8 +98,6 @@ class SignUpPage extends Component {
     });
     this.setState({ Email: e.target.value });
   };
-
-  //changeConfirmPassword = e => { this.setState({ confirmpassword: e.target.value }); };
 
   changeHandler = event => {
     this.setState({ [event.target.name]: event.target.value });
@@ -173,7 +193,7 @@ class SignUpPage extends Component {
                       id="lastName"
                       label="نام خانوادگی"
                       name="lastName"
-                      autoComplete="lname"
+                      //autoComplete="lname"
                       error={this.state.lastName === ""}
                       helperText={
                         this.state.lastName === ""
@@ -183,19 +203,24 @@ class SignUpPage extends Component {
                       onChange={this.changeHandler}
                     />
                   </Grid>
-                  <Grid item xs={12}>                   
-
-                    <TextField
-                      id="email"
-                      name="email"
-                      helperText={touched.email ? errors.email : ""}
-                      error={touched.email && Boolean(errors.email)}
-                      label="Email"
+                  <Grid item xs={12}>
+                  <TextField
+                      variant="outlined"
+                      margin="normal"
+                      required
                       fullWidth
-                      value={this.state.Email}
-                      onChange={change.bind(null, "email")}
+                      id="Email"
+                      label="ایمیل"
+                      name="Email"
+                      //autoComplete="Email"
+                      error={this.state.Email === ""}
+                      helperText={
+                        this.state.Email === ""
+                          ? "ایمیل الزامی می باشد !"
+                          : " "
+                      }
+                      onChange={this.changeHandler}
                     />
-                    
                   </Grid>
                   <Grid item xs={12}>
                     <TextField
