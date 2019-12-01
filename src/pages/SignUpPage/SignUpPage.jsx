@@ -14,12 +14,17 @@ import Container from "@material-ui/core/Container";
 import { create } from "jss";
 import rtl from "jss-rtl";
 import { StylesProvider, jssPreset, ThemeProvider } from "@material-ui/styles";
-import { makeStyles, createMuiTheme, withStyles } from "@material-ui/core/styles";
+import {
+  makeStyles,
+  createMuiTheme,
+  withStyles
+} from "@material-ui/core/styles";
 import { connect } from "react-redux";
 import { signup } from "../../apis/sessions";
 import { style } from "@material-ui/system";
+import Validator from "../../react-happy-validator/index";
+import { withFormik } from "formik";
 import * as Yup from "yup";
-import Validator from '../../react-happy-validator/index';
 
 const styles = theme => ({
   "@global": {
@@ -28,7 +33,7 @@ const styles = theme => ({
     }
   },
   paper: {
-    marginTop: theme.spacing(8),
+    marginTop: theme.spacing(2),
     display: "flex",
     flexDirection: "column",
     alignItems: "center"
@@ -51,53 +56,15 @@ class SignUpPage extends Component {
     super(props);
     this.state = {
       validEmail: false,
-      firstName: "fds",
-      lastName: "gfdg",
-      Email: "ads",
-      password: "sss",
-      confirmpassword: "sss",
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      confirmpassword: "",
 
       emailError: ""
     };
-
-    this.validator = new Validator(this, {
-      rules: {
-        name: { required: true, maxLength: 15, errorState: "nameError" },
-        age: {
-          required: true,
-          integer: true,
-          min: 18,
-          max: 65,
-          errorState: "ageError"
-        },
-        contact: {
-          or: {
-            phone: true,
-            email: true
-          },
-          errorState: "contactError"
-        }
-      },
-      messages: {
-        contact: {
-          or: "You have enter email or phone"
-        }
-      }
-    });
   }
-
-  v_email = e => {
-    this.setState({
-      emailError: !/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@(([[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(
-        this.state.Email
-      )
-        ? "ایمیل وارد شده نامعتبر می باشد !"
-        : this.state.Email.length > 3
-        ? null
-        : "Email must be longer than 3 characters"
-    });
-    this.setState({ Email: e.target.value });
-  };
 
   changeHandler = event => {
     this.setState({ [event.target.name]: event.target.value });
@@ -110,41 +77,23 @@ class SignUpPage extends Component {
     });
   };
 
-  validateEmail = e => {
-    const email = e.target.value;
-    if (!email) {
-      //|| invalidEmail(email)) {
-      this.setState({
-        validEmail: true
-      });
-    } else {
-      this.setState({
-        validEmail: false
-      });
-    }
-  };
-
   render() {
     const {
       classes,
-      validEmail,
-      errors,
+      values,
       touched,
+      errors,
+      isSubmitting,
       handleChange,
-      isValid,
-      setFieldTouched
+      handleBlur,
+      handleSubmit,
+      handleReset
     } = this.props;
 
     const required = value => {
       if (!value.toString().trim().length) {
         return false;
       } else return false;
-    };
-
-    const change = (name, e) => {
-      e.persist();
-      handleChange(e);
-      setFieldTouched(name, true, false);
     };
 
     return (
@@ -167,7 +116,6 @@ class SignUpPage extends Component {
                 <Grid container spacing={2}>
                   <Grid item xs={12} sm={6}>
                     <TextField
-                      error={this.state.firstName === ""}
                       variant="outlined"
                       margin="normal"
                       required
@@ -175,13 +123,12 @@ class SignUpPage extends Component {
                       name="firstName"
                       label="نام"
                       type="firstName"
-                      onChange={this.changeHandler}
+                      //onChange={this.changeHandler}
+                      onChange={handleChange}
                       id="firstName"
-                      helperText={
-                        this.state.firstName === ""
-                          ? "نام الزامی می باشد !"
-                          : " "
-                      }
+                      helperText={touched.firstName ? errors.firstName : ""}
+                      error={touched.firstName && Boolean(errors.firstName)}
+                      onBlur={handleBlur}
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>
@@ -193,33 +140,27 @@ class SignUpPage extends Component {
                       id="lastName"
                       label="نام خانوادگی"
                       name="lastName"
-                      //autoComplete="lname"
-                      error={this.state.lastName === ""}
-                      helperText={
-                        this.state.lastName === ""
-                          ? "نام خانوادگی الزامی می باشد !"
-                          : " "
-                      }
-                      onChange={this.changeHandler}
+                      helperText={touched.lastName ? errors.lastName : ""}
+                      error={touched.lastName && Boolean(errors.lastName)}
+                      //onChange={this.changeHandler}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
                     />
                   </Grid>
                   <Grid item xs={12}>
-                  <TextField
+                    <TextField
                       variant="outlined"
                       margin="normal"
-                      required
                       fullWidth
-                      id="Email"
+                      required
+                      id="email"
                       label="ایمیل"
-                      name="Email"
-                      //autoComplete="Email"
-                      error={this.state.Email === ""}
-                      helperText={
-                        this.state.Email === ""
-                          ? "ایمیل الزامی می باشد !"
-                          : " "
-                      }
-                      onChange={this.changeHandler}
+                      type="email"
+                      //value={values.email}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      helperText={touched.email ? errors.email : ""}
+                      error={touched.email && Boolean(errors.email)}
                     />
                   </Grid>
                   <Grid item xs={12}>
@@ -232,8 +173,11 @@ class SignUpPage extends Component {
                       type="password"
                       id="password"
                       autoComplete="current-password"
-                      //onChange={e => { this.changePassword(e); }}
-                      onChange={this.changeHandler}
+                      //onChange={this.changeHandler}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      helperText={touched.password ? errors.password : ""}
+                      error={touched.password && Boolean(errors.password)}
                     />
                   </Grid>
                   <Grid item xs={12}>
@@ -245,8 +189,11 @@ class SignUpPage extends Component {
                       label="تکرار کلمه عبور"
                       type="password"
                       id="confirmpassword"
-                      //onChange={e => { this.changeConfirmPassword(e); }}
-                      onChange={this.changeHandler}
+                      //onChange={this.changeHandler}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      helperText={touched.confirmPassword ? errors.confirmPassword : ""}
+                      error={touched.confirmPassword && Boolean(errors.confirmPassword)}
                     />
                   </Grid>
                   <Grid item xs={12}>
@@ -270,7 +217,7 @@ class SignUpPage extends Component {
                 </Button>
                 <Grid container justify="flex-end">
                   <Grid item>
-                    <Link href="#" variant="body2">
+                    <Link href="/login" variant="body2">
                       قبلا ثبت نام کرده اید ؟ وارد شوید
                     </Link>
                   </Grid>
@@ -283,6 +230,49 @@ class SignUpPage extends Component {
     );
   }
 }
+
+const Form = withFormik({
+  mapPropsToValues: ({
+    firstName,
+    lastName,
+    email,
+    course,
+    password,
+    confirmPassword
+  }) => {
+    return {
+      firstName: firstName || "",
+      lastName: lastName || "",
+      email: email || "",
+      course: course || "",
+      password: password || "",
+      confirmPassword: confirmPassword || ""
+    };
+  },
+
+  validationSchema: Yup.object().shape({
+    firstName: Yup.string().required("نام الزامی می باشد !"),
+    lastName: Yup.string().required("نام خانوادگی الزامی می باشد !"),
+    email: Yup.string()
+      .email("ایمیل نامعتبر می باشد !")
+      .required("ایمیل الزامی می باشد !"),
+    course: Yup.string().required("Select your course category"),
+    password: Yup.string()
+      .min(8, "کلمه عبور حداقل باید 8 کاراکتر باشد !")
+      .required("کلمه عبور را وارد کنید !"),
+    confirmPassword: Yup.string()
+      .required("کلمه عبور را دوباره وارد کنید !")
+      .oneOf([Yup.ref("password")], "کلمه عبور و تکرار آن با هم یکسان نیست !")
+  }),
+
+  handleSubmit: (values, { setSubmitting }) => {
+    setTimeout(() => {
+      // submit to the server
+      alert(JSON.stringify(values, null, 2));
+      setSubmitting(false);
+    }, 1000);
+  }
+})(SignUpPage);
 
 const theme = createMuiTheme({
   direction: "rtl" // Both here and <body dir="rtl">
@@ -307,4 +297,4 @@ const mapDispatchToProps = dispatch => {
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(withStyles(styles)(SignUpPage));
+)(withStyles(styles)(Form));
