@@ -8,16 +8,18 @@ import Contact from '../pages/Contactus'
 import LoginPage from "../pages/LoginPage/LoginPage";
 import SignUpPage from "../pages/SignUpPage/SignUpPage.jsx";
 import PrivateRoute from "../components/PrivateRoute/PrivateRoute";
+import MainLayout from "../components/Layouts/MainLayout";
+import UserLayout from "../components/Layouts/UserLayout";
 
 const Main =() =>(
     <Switch>
-        <Route exact path="/" component={Home} />
-        <PrivateRoute path="/home" component={Home} />
-        <PrivateRoute path="/tutorials" component={Tutorials} />
-        <PrivateRoute path="/about" component={About} />
-        <PrivateRoute path="/contact" component={Contact} />
-        <Route exact path="/signup" component={SignUpPage} />
-        <Route exact path="/Login" component={LoginPage} />
+        <Route exact path="/" component={Home} layout={MainLayout} />
+        <PrivateRoute path="/home" component={Home} layout={MainLayout} />
+        <PrivateRoute path="/tutorials" component={Tutorials} layout={MainLayout} />
+        <PrivateRoute path="/about" component={About} layout={MainLayout} />
+        <PrivateRoute path="/contact" component={Contact} layout={MainLayout} />
+        <Route exact path="/signup" component={SignUpPage} layout={UserLayout} />
+        <Route exact path="/Login" component={LoginPage} layout={UserLayout} />
     </Switch>
 )
 
