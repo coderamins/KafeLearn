@@ -25,6 +25,7 @@ import { style } from "@material-ui/system";
 import Validator from "../../react-happy-validator/index";
 import { withFormik } from "formik";
 import * as Yup from "yup";
+import { API } from "../../apis/CONFIG";
 
 const styles = theme => ({
   "@global": {
@@ -61,21 +62,21 @@ class SignUpPage extends Component {
       email: "",
       password: "",
       confirmpassword: "",
-
       emailError: ""
     };
   }
 
-  changeHandler = event => {
-    this.setState({ [event.target.name]: event.target.value });
-  };
+  // changeHandler = event => {
+  //   this.setState({ [event.target.name]: event.target.value });
+  // };
 
-  handleSubmit = e => {
-    e.preventDefault();
-    this.props.onSubmit(this.state, () => {
-      window.location("/dash");
-    });
-  };
+  // handleSubmit = e => {
+  //   e.preventDefault();
+  //   alert(this.state.firstName);
+  //   this.props.onSubmit(this.state, () => {
+  //     window.location("/dash");
+  //   });
+  // };
 
   render() {
     const {
@@ -90,12 +91,6 @@ class SignUpPage extends Component {
       handleReset
     } = this.props;
 
-    const required = value => {
-      if (!value.toString().trim().length) {
-        return false;
-      } else return false;
-    };
-
     return (
       <Container component="main" maxWidth="xs">
         <CssBaseline />
@@ -109,7 +104,8 @@ class SignUpPage extends Component {
                 ثبت نام
               </Typography>
               <form
-                onSubmit={e => this.handleSubmit(e)}
+                //onSubmit={e => this.handleSubmit(e)}
+                onSubmit={handleSubmit}
                 className={classes.form}
                 noValidate
               >
@@ -192,8 +188,13 @@ class SignUpPage extends Component {
                       //onChange={this.changeHandler}
                       onChange={handleChange}
                       onBlur={handleBlur}
-                      helperText={touched.confirmPassword ? errors.confirmPassword : ""}
-                      error={touched.confirmPassword && Boolean(errors.confirmPassword)}
+                      helperText={
+                        touched.confirmpassword ? errors.confirmpassword : ""
+                      }
+                      error={
+                        touched.confirmpassword &&
+                        Boolean(errors.confirmpassword)
+                      }
                     />
                   </Grid>
                   <Grid item xs={12}>
@@ -238,7 +239,7 @@ const Form = withFormik({
     email,
     course,
     password,
-    confirmPassword
+    confirmpassword
   }) => {
     return {
       firstName: firstName || "",
@@ -246,7 +247,7 @@ const Form = withFormik({
       email: email || "",
       course: course || "",
       password: password || "",
-      confirmPassword: confirmPassword || ""
+      confirmpassword: confirmpassword || ""
     };
   },
 
@@ -256,21 +257,52 @@ const Form = withFormik({
     email: Yup.string()
       .email("ایمیل نامعتبر می باشد !")
       .required("ایمیل الزامی می باشد !"),
-    course: Yup.string().required("Select your course category"),
     password: Yup.string()
       .min(8, "کلمه عبور حداقل باید 8 کاراکتر باشد !")
       .required("کلمه عبور را وارد کنید !"),
-    confirmPassword: Yup.string()
-      .required("کلمه عبور را دوباره وارد کنید !")
-      .oneOf([Yup.ref("password")], "کلمه عبور و تکرار آن با هم یکسان نیست !")
+    confirmpassword: Yup.string()
+      .required("تکرار کلمه عبور را وارد کنید !")
+      .oneOf([Yup.ref("password")], "کلمه عبور و تکرار آن مطابقت ندارند !")
   }),
 
   handleSubmit: (values, { setSubmitting }) => {
-    setTimeout(() => {
-      // submit to the server
-      alert(JSON.stringify(values, null, 2));
-      setSubmitting(false);
-    }, 1000);
+    fetch(API.BASE + "/api/user/register", {
+      method: "POST",
+      mode: "no-cors",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: `FirstName='${values.firstName}'
+            &LastName='${values.lastName}'
+            &Email='${values.Email}'
+            &Password='${values.password}'`
+      //body: JSON.stringify({
+      //  FirstName: "amir",
+      //  secondParam: "yourOtherValue"
+      //})
+    })
+      .then(response => {
+        alert(response.status);
+        console.log(response);
+        if (response.status >= 200 && response.status < 300 && response.ok) {
+          //dispatch(registerSuccess(userData));
+          alert(
+            "ایمیلی برای شما به آدرس " +
+            values.Email +
+              " فرستاده شد. برای ورود روی لینک " +
+              "فعال سازی کلیک کنید یا کد فعال سازی را در فرم زیر وارد کنید. ویرایش ایمیل"
+          );
+        } else {
+          const error = new Error(response.statusText);
+          error.response = response;
+          //dispatch(loginError(error));
+          throw error;
+        }
+      })
+      .catch(error => {
+        console.log("request failed", error);
+      });
   }
 })(SignUpPage);
 
@@ -289,6 +321,7 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = dispatch => {
   return {
     onSubmit: (userData, cb) => {
+      alert(Form.firstName);
       dispatch(signup(userData, cb));
     }
   };
