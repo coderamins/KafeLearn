@@ -54,7 +54,7 @@ export function signup(userData) {
       //  secondParam: "yourOtherValue"
       //})
     })
-      .then(response => {
+      .then(function(response) {
         alert(response.status);
         console.log(response);
         if (response.status >= 200 && response.status < 300 && response.ok) {

@@ -26,6 +26,9 @@ import Validator from "../../react-happy-validator/index";
 import { withFormik } from "formik";
 import * as Yup from "yup";
 import { API } from "../../apis/CONFIG";
+import axios from "axios";
+import EmailVerify from "../../pages/EmailVerify/email-verify";
+import { Redirect } from "react-router-dom";
 
 const styles = theme => ({
   "@global": {
@@ -65,18 +68,6 @@ class SignUpPage extends Component {
       emailError: ""
     };
   }
-
-  // changeHandler = event => {
-  //   this.setState({ [event.target.name]: event.target.value });
-  // };
-
-  // handleSubmit = e => {
-  //   e.preventDefault();
-  //   alert(this.state.firstName);
-  //   this.props.onSubmit(this.state, () => {
-  //     window.location("/dash");
-  //   });
-  // };
 
   render() {
     const {
@@ -264,45 +255,42 @@ const Form = withFormik({
       .required("تکرار کلمه عبور را وارد کنید !")
       .oneOf([Yup.ref("password")], "کلمه عبور و تکرار آن مطابقت ندارند !")
   }),
-
+ 
   handleSubmit: (values, { setSubmitting }) => {
-    fetch(API.BASE + "/api/user/register", {
-      method: "POST",
-      mode: "no-cors",
+    let setResp = this;
+    const user = {
+      firstName: values.firstName,
+      lastName: values.lastName,
+      password: values.password,
+      Email: values.email
+    };
+
+    fetch("http://localhost:17057/api/user/Register", {
+      method: "post",
+      //mode: "no-cors",
       headers: {
         Accept: "application/json",
-        "Content-Type": "application/x-www-form-urlencoded"
+        "Content-Type": "application/json"
       },
-      body: `FirstName='${values.firstName}'
-            &LastName='${values.lastName}'
-            &Email='${values.Email}'
-            &Password='${values.password}'`
-      //body: JSON.stringify({
-      //  FirstName: "amir",
-      //  secondParam: "yourOtherValue"
-      //})
-    })
-      .then(response => {
-        alert(response.status);
-        console.log(response);
-        if (response.status >= 200 && response.status < 300 && response.ok) {
-          //dispatch(registerSuccess(userData));
-          alert(
-            "ایمیلی برای شما به آدرس " +
-            values.Email +
-              " فرستاده شد. برای ورود روی لینک " +
-              "فعال سازی کلیک کنید یا کد فعال سازی را در فرم زیر وارد کنید. ویرایش ایمیل"
-          );
-        } else {
-          const error = new Error(response.statusText);
-          error.response = response;
-          //dispatch(loginError(error));
-          throw error;
-        }
+      body: JSON.stringify({
+        Email: "ramin@gmail.com",
+        Password: "dfgdfg",
+        FirstName: "FirstName",
+        LastName: "LastName"
       })
-      .catch(error => {
-        console.log("request failed", error);
-      });
+    }).then(response => {
+      if (response.status >= 200 && response.status < 300 && response.ok) {
+        //dispatch(registerSuccess(userData));
+        alert(response.status);
+        return <EmailVerify names={ ['foo', 'bar'] } isOpen={true} num={10} />
+
+      } else {
+        const error = new Error(response.statusText);
+        error.response = response;
+        //dispatch(loginError(error));
+        throw error;
+      }
+    });
   }
 })(SignUpPage);
 
